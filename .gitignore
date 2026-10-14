@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+.venv/
+# 教材のPDF・画像（干支暦を含む）、鑑定アプリの出力PDFは入れない
+*.pdf
+*.png
+*.jpg
+*.jpeg
