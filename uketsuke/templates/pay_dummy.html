@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}お支払い（ダミー） — 六十の風景{% endblock %}
+{% block body %}
+<h1>お支払い</h1>
+<p class="share">Stripe の鍵が設定されていないので、ダミーの決済ページです。ボタンを押すと入金済みとして先へ進みます。</p>
+<p>{{ o.plan_label }}　{{ "{:,}".format(o.price) }}円<br>受付番号　{{ o.id }}</p>
+<form action="/pay/dummy/{{ o.id }}" method="post"><button type="submit">支払う（ダミー）</button></form>
+{% endblock %}

@@ -10,3 +10,8 @@ dist/
 *.png
 *.jpg
 *.jpeg
+
+# 受付・製本の実行時に生まれるもの
+fonts/
+outbox/
+*.sqlite3

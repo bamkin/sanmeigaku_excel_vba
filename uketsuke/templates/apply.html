@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}問いを書いて、続きを読む — 六十の風景{% endblock %}
+{% block head %}<style>
+  textarea { font: inherit; font-size: 16px; line-height: 1.8; width: 100%; box-sizing: border-box; padding: 10px 12px;
+             border: 1px solid var(--usuai); background: #fff; color: var(--sumi); min-height: 5.5em; }
+  .q { margin: 28px 0; } .q p { margin: 0 0 8px; } .q .n { color: var(--ai); font-size: 14px; letter-spacing: .1em; }
+  .plan label { display: block; color: var(--sumi); padding: 10px 0; border-top: 1px solid var(--usuai); }
+  .plan label:last-child { border-bottom: 1px solid var(--usuai); }
+  .plan input { margin-right: 10px; } .plan small { color: var(--ai); display: block; margin-left: 26px; font-size: 14px; }
+  .basic label { margin-top: 14px; }
+</style>{% endblock %}
+{% block body %}
+<h1>問いを書いて、続きを読む</h1>
+<p>全て自由記述です。整理されていなくて構いません。十分ほどで書けます。</p>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+<form action="/apply" method="post">
+  <div class="basic">
+    <label for="name">お名前（任意。鑑定書の宛名に使います）</label>
+    <input type="text" id="name" name="name" value="{{ form.name or '' }}" maxlength="60">
+    <label for="birth">生年月日</label>
+    <input type="date" id="birth" name="birth" value="{{ form.birth or birth }}" min="1900-01-01" max="2100-12-31" required>
+    <label for="sex">性別（任意）</label>
+    <select id="sex" name="sex">
+      <option value="unknown" {% if (form.sex or 'unknown') == 'unknown' %}selected{% endif %}>答えない</option>
+      <option value="male" {% if form.sex == 'male' %}selected{% endif %}>男性</option>
+      <option value="female" {% if form.sex == 'female' %}selected{% endif %}>女性</option>
+    </select>
+    <label for="email">メールアドレス（鑑定書をお送りします）</label>
+    <input type="text" id="email" name="email" value="{{ form.email or '' }}" inputmode="email" required>
+  </div>
+
+  <div class="q"><p><span class="n">一</span></p><p>今、一番気になっていることを一つ、そのままの言葉で書いてください。仕事でも家族でも体でも、整理されていなくて構いません。</p>
+    <textarea id="q1" name="q1" required>{{ form.q1 or '' }}</textarea></div>
+  <div class="q"><p><span class="n">二</span></p><p>それについて、あなたの中では「本当はこうしたい」という方向がありますか。あるなら書いてください。なければ「ない」で結構です。</p>
+    <textarea id="q2" name="q2">{{ form.q2 or '' }}</textarea></div>
+  <div class="q"><p><span class="n">三</span></p><p>これまでの人生で「あの時期が転機だった」と思う年を一つか二つ。年齢か西暦と、何があったかを一行で。</p>
+    <textarea id="q3" name="q3">{{ form.q3 or '' }}</textarea></div>
+  <div class="q"><p><span class="n">四</span></p><p>人生で繰り返し起きている気がすること、または「自分はいつもこうなる」と感じるパターンがあれば書いてください。</p>
+    <textarea id="q4" name="q4">{{ form.q4 or '' }}</textarea></div>
+  <div class="q"><p><span class="n">五</span></p><p>この鑑定を読み終えたとき、どうなっていたら「受けてよかった」と思いますか。</p>
+    <textarea id="q5" name="q5">{{ form.q5 or '' }}</textarea></div>
+  <div class="q"><p><span class="n">任意</span></p><p>今の体調や、体で気になっていることがあれば。</p>
+    <textarea id="optional" name="optional">{{ form.optional or '' }}</textarea></div>
+
+  <div class="plan">
+    {% for key, (label, price) in plans.items() %}
+    <label><input type="radio" name="plan" value="{{ key }}" {% if (form.plan or 'kanzen') == key %}checked{% endif %}>{{ label }}　{{ "{:,}".format(price) }}円
+      <small>{% if key == 'kanzen' %}五つの問いに答える鑑定書（PDF）。承認のうえお送りします{% else %}完全版を逆井が一読・加筆してお送りします{% endif %}</small></label>
+    {% endfor %}
+  </div>
+  <button type="submit">お支払いへ進む</button>
+</form>
+{% endblock %}

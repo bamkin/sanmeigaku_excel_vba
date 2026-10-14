@@ -60,6 +60,18 @@ python scripts/dump_shindan.py       # 60本の一段落・結びと、構造の
 
 生年月日 → 番号・干支・自前の名・季節・風景の一段落・構造の一言（定型、LLM不使用）・風景カード（SVG）。詳細は docs/63_無料診断_実装メモ.md。
 
+## 受付（開発順序4・実装済み）と製本（開発順序5・実装済み）
+
+```
+uvicorn shindan.app:app --reload                         # /apply → 決済 → 生成 → /admin で承認 → 送付
+ROKUJU_GENERATOR=dummy uvicorn shindan.app:app --reload  # API を呼ばず、samples の実機2 で導線を通す
+python scripts/get_fonts.py                              # PDF 用に Noto Serif JP を fonts/ へ（一度だけ）
+python -m seihon samples/1973-11-23_実機2.md --birth 1973-11-23 --sex male --name "逆井 勤" --out out.pdf
+```
+
+`uketsuke/` が申込・決済・生成・承認・送付（SQLite、アダプタは環境変数で Stripe／Resend／Claude とダミーを切り替え。鍵が無ければダミーで全導線が通る）。`seihon/` が鑑定書 Markdown → PDF（WeasyPrint、Noto Serif JP、水墨のトーン）。
+承認画面は `/admin`（`ROKUJU_ADMIN_PASSWORD` で Basic 認証）。環境変数の一覧と決めたことは docs/64_受付_実装メモ.md、PDF の体裁は docs/65_製本_実装メモ.md。Railway 用の Dockerfile あり。
+
 ## docs/ の一覧
 
 | ファイル | 役割 | 使う層 |
@@ -76,6 +88,8 @@ python scripts/dump_shindan.py       # 60本の一段落・結びと、構造の
 | 61_算出層_実装メモ.md | 算出層の実装判断・教材との食い違い（確認済み） | 算出層 |
 | 62_生成層_実装メモ.md | 生成層の実装判断・API設定・確認待ち | 生成層 |
 | 63_無料診断_実装メモ.md | 無料診断の構成・構造の一言の定型・確認待ち | Web層 |
+| 64_受付_実装メモ.md | 申込・決済・生成・承認・送付の経路・状態・環境変数 | Web層 |
+| 65_製本_実装メモ.md | PDF の体裁・フォント・確認待ち | PDF |
 
 ## リポジトリに入れないもの
 

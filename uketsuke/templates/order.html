@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}受付 {{ o.id }} — 六十の風景{% endblock %}
+{% block body %}
+<h1>受け付けました</h1>
+<p>受付番号　{{ o.id }}<br>{{ o.plan_label }}　{{ o.birth }}{% if o.name %}　{{ o.name }} 様{% endif %}</p>
+<p>いまの状態：<strong>{{ o.status_label }}</strong></p>
+{% if o.status == 'pending_payment' %}
+<p>お支払いがまだ確認できていません。</p>
+{% elif o.status == 'sent' %}
+<p>鑑定書を {{ o.email }} へお送りしました。届いていなければ、迷惑メールの箱も見てみてください。</p>
+{% else %}
+<p>鑑定書を作り、ひとが一度読んでから、{{ o.email }} へお送りします。数日いただくことがあります。</p>
+{% endif %}
+<a class="button" href="/">風景へ戻る</a>
+{% endblock %}

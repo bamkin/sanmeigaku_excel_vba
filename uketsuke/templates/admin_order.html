@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}受付 {{ o.id }} — 承認画面{% endblock %}
+{% block head %}<style>
+  main { max-width: 1000px; } a { color: var(--ai); }
+  .meta { font-size: 14px; line-height: 1.8; } .meta b { color: var(--ai); font-weight: 500; margin-right: 6px; }
+  .answers { background: #fff; border: 1px solid var(--usuai); padding: 14px 18px; font-size: 15px; margin: 20px 0; }
+  .answers p { margin: 0 0 .6em; }
+  .issues { font-size: 14px; margin: 16px 0; } .issues .error { color: #8a3b3b; } .issues .warning { color: #8a5a1f; } .issues .note { color: var(--ai); }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 20px 0; }
+  .actions form { margin: 0; } .actions button { margin: 0; } .actions .sub { background: #fff; color: var(--ai); border: 1px solid var(--ai); }
+  .preview { background: #fff; border: 1px solid var(--usuai); padding: 24px 32px; margin: 20px 0; }
+  .preview h2 { font-size: 20px; font-weight: 500; margin: 1.4em 0 .6em; border-bottom: 1px solid var(--usuai); padding-bottom: 4px; }
+  .preview table { border-collapse: collapse; width: 100%; font-size: 14px; } .preview th, .preview td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--usuai); vertical-align: top; }
+  .preview blockquote { margin: 0 0 1.2em; padding: 6px 14px; border-left: 2px solid var(--ai); background: #f3f1ea; }
+  textarea { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 14px; line-height: 1.7; width: 100%; box-sizing: border-box; min-height: 480px; padding: 12px; border: 1px solid var(--usuai); }
+  input[type=text] { max-width: 100%; }
+  .hist { font-size: 13px; color: var(--ai); } .hist li { margin-bottom: 4px; }
+  pre.err { white-space: pre-wrap; font-size: 12px; color: #8a3b3b; background: #fff; padding: 12px; border: 1px solid #d9b4b4; }
+</style>{% endblock %}
+{% block body %}
+<p class="share"><a href="/admin">← 一覧</a></p>
+<h1>受付 {{ o.id }}　<span style="font-size:18px">{{ o.status_label }}</span></h1>
+<div class="meta">
+  <b>生年月日</b>{{ o.birth }}（{{ {'male':'男性','female':'女性'}.get(o.sex, '未記入') }}）　<b>宛名</b>{{ o.name or '—' }}　<b>プラン</b>{{ o.plan_label }}　<b>メール</b>{{ o.email }}<br>
+  <b>日干支</b>{{ o.destiny.rokuju.day.kanshi }}　{{ o.destiny.rokuju.day.name }}　<b>申込</b>{{ o.created_at }}　<b>決済</b>{{ o.payment_ref or '—' }}
+</div>
+<div class="answers">
+  <p><b>一</b>　{{ o.answers.q1 }}</p><p><b>二</b>　{{ o.answers.q2 or '（記入なし）' }}</p><p><b>三</b>　{{ o.answers.q3 or '（記入なし）' }}</p>
+  <p><b>四</b>　{{ o.answers.q4 or '（記入なし）' }}</p><p><b>五</b>　{{ o.answers.q5 or '（記入なし）' }}</p><p><b>任意</b>　{{ o.answers.optional or '（記入なし）' }}</p>
+</div>
+
+{% if gen %}
+<div class="issues">
+  <p>生成 #{{ gen.id }}　{{ gen.created_at }}　model={{ gen.model }}　stop={{ gen.stop_reason }}{% if char_count %}　{{ "{:,}".format(char_count) }}字{% endif %}</p>
+  {% for n in gen.notes %}<p class="note">note: {{ n }}</p>{% endfor %}
+  {% for i in gen.issues %}<p class="{{ i.level }}">[{{ i.level }}] {{ i.code }}: {{ i.message }}</p>{% else %}{% if not gen.error %}<p class="note">禁則チェック：問題なし</p>{% endif %}{% endfor %}
+  {% if gen.error %}<pre class="err">{{ gen.error }}</pre>{% endif %}
+</div>
+{% endif %}
+
+<div class="actions">
+  {% if o.status in ('paid', 'failed') %}<form action="/admin/order/{{ o.id }}/generate" method="post"><button type="submit">生成する</button></form>{% endif %}
+  {% if o.status in ('review', 'approved', 'failed') %}<form action="/admin/order/{{ o.id }}/regenerate" method="post"><button type="submit" class="sub">再生成</button></form>{% endif %}
+  {% if md %}<a class="button sub" href="/admin/order/{{ o.id }}/pdf" target="_blank" rel="noopener">PDF を見る</a>{% endif %}
+  {% if o.status == 'approved' %}<form action="/admin/order/{{ o.id }}/send" method="post"><button type="submit">PDF を送付する</button></form>{% endif %}
+  {% if o.status == 'generating' %}<p class="share">生成中です。数分したら読み込み直してください。</p>{% endif %}
+</div>
+
+{% if md %}
+<h2 style="font-size:18px;font-weight:500">本文</h2>
+<div class="preview">{{ preview | safe }}</div>
+{% if o.status in ('review', 'approved') %}
+<form action="/admin/order/{{ o.id }}/approve" method="post">
+  <label for="markdown">加筆する（Markdown のまま）</label>
+  <textarea id="markdown" name="markdown">{{ md }}</textarea>
+  <label for="note">メモ（任意）</label>
+  <input type="text" id="note" name="note" value="">
+  <button type="submit">{% if o.status == 'approved' %}加筆して承認し直す{% else %}承認する{% endif %}</button>
+</form>
+{% endif %}
+{% endif %}
+
+{% if approvals or deliveries %}
+<h2 style="font-size:16px;font-weight:500;margin-top:40px">履歴</h2>
+<ul class="hist">
+{% for a in approvals %}<li>{{ a.created_at }}　{{ a.action }}{% if a.note %}　{{ a.note }}{% endif %}</li>{% endfor %}
+{% for d in deliveries %}<li>{{ d.created_at }}　送付（{{ d.channel }}）→ {{ d.to_addr }}　{{ d.attachment }}　{{ d.result }}</li>{% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

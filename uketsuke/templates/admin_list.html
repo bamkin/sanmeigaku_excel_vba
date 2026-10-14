@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}承認画面 — 六十の風景{% endblock %}
+{% block head %}<style>
+  main { max-width: 1000px; } table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.6; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--usuai); vertical-align: top; }
+  th { color: var(--ai); font-weight: 500; } a { color: var(--ai); }
+  .st { white-space: nowrap; } .st.review { color: #8a5a1f; font-weight: 700; } .st.failed { color: #8a3b3b; }
+</style>{% endblock %}
+{% block body %}
+<h1>承認画面</h1>
+{% if auth == 'open' %}<p class="error">認証なしで開いています（ROKUJU_ADMIN_PASSWORD が未設定）。公開する前に設定してください。</p>{% endif %}
+<table>
+<tr><th>受付</th><th>状態</th><th>生年月日</th><th>宛名</th><th>プラン</th><th>メール</th><th>申込日時</th></tr>
+{% for o in orders %}
+<tr><td><a href="/admin/order/{{ o.id }}">{{ o.id }}</a></td><td class="st {{ o.status }}">{{ o.status_label }}</td>
+<td>{{ o.birth }}</td><td>{{ o.name or '—' }}</td><td>{{ o.plan_label }}</td><td>{{ o.email }}</td><td>{{ o.created_at }}</td></tr>
+{% else %}
+<tr><td colspan="7">申込はまだありません</td></tr>
+{% endfor %}
+</table>
+{% endblock %}
