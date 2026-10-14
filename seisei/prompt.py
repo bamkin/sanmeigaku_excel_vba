@@ -34,7 +34,7 @@ OUTPUT_FORMAT = """
 - 第一章「一、」の見出しの直後に、`[[風景:日]]` という一行だけを置く。日干支の風景の本文は事前執筆したものがそこに差し込まれる。風景の本文を書き直したり要約して並べたりしない。差し込まれる本文を前提に、その続きから書く
 - 月干支・年干支の風景に触れるときは、番号・干支・名を言い、像を一文か二文で引く。全文を再掲しない。必要なら `[[風景:月]]` `[[風景:年]]` の一行で差し込める
 - 第二章は七つの角度の表（角度／あなたの値／意味）、第四章は年運の表、第七章は二列の表を Markdown の表で書く
-- 本文は 6,000〜9,000 字（空白を除く）
+- 分量は風景の差し込みを含めて 8,000〜10,000 字を目安に（空白を除く）。上限は 10,500 字。削って上限に収めるより、読みの厚みを優先する
 - 専門用語は初出時に括弧で言い換えを添え、第八章に言い換え表を付ける
 - 本日の日付を「今年」の基準にする。年運の読みは今年から始める
 """
@@ -85,7 +85,28 @@ def build_system_prompt(docs_dir: str) -> str:
         + _read(docs_dir, "50_鑑定書サンプル.md"),
         "# 六十の風景（事前執筆・全六十本。差し込まれる本文であり、像を引く元）\n\n" + _landscapes_block(landscapes),
     ]
-    return "\n\n---\n\n".join(sections)
+    return SECTION_SEP.join(sections)
+
+
+SECTION_SEP = "\n\n---\n\n"
+# キャッシュ境界。手本（docs/50）や構成（docs/00）を直しても、その手前のブロックは読みで済む
+BLOCK_STARTS = ("# 鑑定書の構成と禁則", "# 手本：")
+
+
+def system_blocks(system: str) -> list[str]:
+    """システムプロンプトをキャッシュ境界で分ける。結合すれば元の文字列に戻る。
+
+    [役割＋文体＋約束＋学理] / [構成と禁則＋出力形式] / [手本＋六十の風景]
+    """
+    blocks, rest = [], system
+    for marker in BLOCK_STARTS:
+        i = rest.find(SECTION_SEP + marker)
+        if i < 0:
+            continue
+        blocks.append(rest[:i])
+        rest = rest[i:]
+    blocks.append(rest)
+    return blocks
 
 
 ANSWER_LABELS = [

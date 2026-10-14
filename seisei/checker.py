@@ -3,7 +3,7 @@
 - 禁則語（教材・流派・出典・算命学の教科書・〜と書かれています）
 - 六十花甲子の教材由来の呼び名（docs/45 の「教材の呼び名」列から生成）
 - 構成見出しの欠落
-- 文字数（完全版 6,000〜9,000 字目安）
+- 文字数（完全版は風景込みで 8,000〜10,000 字目安、上限 10,500）
 - 文体ガイドの頻度制限（〜ではなく・つまり・だからこそ は一通に各一回まで）、感嘆符・絵文字
 """
 from __future__ import annotations
@@ -16,7 +16,7 @@ from functools import lru_cache
 FORBIDDEN_WORDS = ["教材", "流派", "出典", "算命学の教科書", "と書かれています", "と言われています"]
 LIMITED_PHRASES = ["ではなく", "つまり", "だからこそ"]
 REQUIRED_HEADINGS = ["はじめに", "一、", "二、", "三、", "四、", "五、", "六、", "七、", "八、"]
-CHAR_RANGE = (6000, 9000)
+CHAR_RANGE = (8000, 10500)   # 下限は目安の下端、上限は docs/00 の上限（目安 8,000〜10,000）
 
 
 @dataclass
@@ -82,7 +82,7 @@ def check_report(md: str, docs_dir: str, exempt: tuple[str, ...] = ()) -> list[I
 
     n = count_chars(full)
     if not (CHAR_RANGE[0] <= n <= CHAR_RANGE[1]):
-        issues.append(Issue("warning", "char_count", f"{n}字（目安 {CHAR_RANGE[0]}〜{CHAR_RANGE[1]}）"))
+        issues.append(Issue("warning", "char_count", f"{n}字（目安 8000〜10000、上限 {CHAR_RANGE[1]}）"))
 
     for p in LIMITED_PHRASES:
         c = md.count(p)

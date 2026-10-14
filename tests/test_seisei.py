@@ -9,7 +9,7 @@ from sanmei import compute_destiny
 from seisei.checker import check_report, textbook_name_levels, textbook_names
 from seisei.generate import api_key_from_env
 from seisei.landscape import int_to_kanji, kanji_to_int, load_landscapes
-from seisei.prompt import build_system_prompt, build_user_message, insert_landscapes
+from seisei.prompt import build_system_prompt, build_user_message, insert_landscapes, system_blocks
 
 DOCS = os.path.join(os.path.dirname(__file__), "..", "docs")
 
@@ -106,3 +106,14 @@ def test_api_key_from_env(monkeypatch):
     assert api_key_from_env() == "sk-main"  # 本来の名前が優先
     monkeypatch.setenv("ANTHROPIC_API_KEY", "")
     assert api_key_from_env() == "sk-rokuju"  # 空文字は無いものとして扱う
+
+
+def test_system_blocks_roundtrip():
+    sp = build_system_prompt(DOCS)
+    blocks = system_blocks(sp)
+    assert "".join(blocks) == sp
+    assert len(blocks) == 3
+    assert "# 学理リファレンス" in blocks[0] and "# 鑑定書の構成と禁則" not in blocks[0]
+    assert blocks[1].lstrip("\n- ").startswith("# 鑑定書の構成と禁則") and "# 出力形式" in blocks[1]
+    assert blocks[2].lstrip("\n- ").startswith("# 手本") and "# 六十の風景" in blocks[2]
+    assert "8,000〜10,000" in blocks[1]

@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 from .checker import Issue, check_report
 from .landscape import load_landscapes
-from .prompt import build_system_prompt, build_user_message, insert_landscapes
+from .prompt import build_system_prompt, build_user_message, insert_landscapes, system_blocks
 
 DEFAULT_MODEL = os.environ.get("SEISEI_MODEL", "claude-opus-5-5")
 DEFAULT_EFFORT = os.environ.get("SEISEI_EFFORT", "high")
@@ -54,7 +54,7 @@ def _call_claude(system: str, user: str, model: str, effort: str, client=None) -
     kwargs = dict(
         model=model,
         max_tokens=MAX_TOKENS,
-        system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
+        system=[{"type": "text", "text": b, "cache_control": {"type": "ephemeral"}} for b in system_blocks(system)],
         messages=[{"role": "user", "content": user}],
         thinking={"type": "adaptive"},
         output_config={"effort": effort},
