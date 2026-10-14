@@ -22,9 +22,9 @@ python scripts/gen_setsu.py --year 1974  # 節入日の時刻を1年ぶん表示
 
 `sanmei/` は依存なしの純Python。Python から使うときは `from sanmei import compute_destiny`。
 実装上の判断と教材との食い違いは docs/61_算出層_実装メモ.md にまとめてある。
-節入日JSON（sanmei/data/setsu.json）は干支暦との突合待ち（`python scripts/gen_setsu.py --year 1974` で時刻付きで表示）。
+節入日JSON（sanmei/data/setsu.json）は 1974年・1930年を干支暦と突合済み（2026-10-14）。
 
-## 生成層（開発順序2・実装済み、実機未検証）
+## 生成層（開発順序2・実装済み、実機サンプルは API キー待ち）
 
 ```
 pip install -r requirements-dev.txt      # anthropic SDK を含む
@@ -36,6 +36,28 @@ python -m seisei --check 鑑定書.md        # 禁則チェックだけ通す
 
 `seisei/` はシステムプロンプトを docs/10・29・40・00（構成と禁則）・50・30〜39 から組み立て、生成後に風景を差し込み、禁則チェック（docs/45 の教材呼び名、docs/00 の禁則語、見出し、文字数、文体の頻度制限）を通す。
 実装判断と確認待ちは docs/62_生成層_実装メモ.md。サンプル生成と docs/50 との差は samples/1973-11-23_比較.md。
+
+### 実機でサンプルを生成して比較を更新する
+
+1. Anthropic のコンソールで API キーを発行し、環境変数に入れる：`export ANTHROPIC_API_KEY=sk-ant-...`
+2. 生成する（1973-11-23 男性、申込回答は samples/ のもの。`--today` は年運の「今年」を固定するため）：
+   ```
+   python -m seisei --birth 1973-11-23 --sex male --answers samples/1973-11-23_申込回答.json \
+     --name "逆井 勤" --today 2026-10-14 --out samples/1973-11-23_実機.md
+   ```
+   `samples/1973-11-23_実機.md`（風景差し込み済み）と `samples/1973-11-23_実機.raw.md`（モデル出力そのまま）ができ、禁則チェックの結果と usage が表示される
+3. 数字の比較を出す：`python scripts/compare_report.py samples/1973-11-23_実機.md docs/50_鑑定書サンプル.md`
+4. `samples/1973-11-23_比較.md` の「数字」の表を 3 の出力で置き換え、構成・文体・内容の差を読んで書き直す。セッション内で書いたサンプル（`1973-11-23_生成サンプル.md`）は手本として残してよいが、比較の本番は実機の出力
+5. モデルや effort を変えて取り直すときは `--model` `--effort`（既定 claude-opus-5-5 / high）。出力ファイル名を変えて並べる
+
+## 無料診断（開発順序3・実装済み）
+
+```
+uvicorn shindan.app:app --reload     # http://127.0.0.1:8000/
+python scripts/dump_shindan.py       # 60本の一段落・結びと、構造の一言25通りを samples/ に書き出す
+```
+
+生年月日 → 番号・干支・自前の名・季節・風景の一段落・構造の一言（定型、LLM不使用）・風景カード（SVG）。詳細は docs/63_無料診断_実装メモ.md。
 
 ## docs/ の一覧
 
@@ -52,6 +74,7 @@ python -m seisei --check 鑑定書.md        # 禁則チェックだけ通す
 | 60_算出手順.md | 算出の規則・早見表・テストケース6件 | 算出層 |
 | 61_算出層_実装メモ.md | 算出層の実装判断・教材との食い違い（確認済み） | 算出層 |
 | 62_生成層_実装メモ.md | 生成層の実装判断・API設定・確認待ち | 生成層 |
+| 63_無料診断_実装メモ.md | 無料診断の構成・構造の一言の定型・確認待ち | Web層 |
 
 ## リポジトリに入れないもの
 

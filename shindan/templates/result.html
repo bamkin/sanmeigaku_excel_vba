@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ r.heading }} — 六十の風景{% endblock %}
+{% block head %}
+<meta property="og:title" content="{{ r.heading }} — 六十の風景">
+<meta property="og:description" content="{{ r.closing }}">
+<meta property="og:image" content="{{ r.card_path }}">
+{% endblock %}
+{% block body %}
+<h1>{{ r.heading }}</h1>
+<p class="season">{{ r.season_line }}</p>
+<p>{{ r.paragraph }}</p>
+<p class="closing">{{ r.closing }}</p>
+<div class="hitokoto">{{ r.hitokoto }}</div>
+<p>この風景の続きと、あなたという構造、これからの時間軸を、一冊の鑑定書にしてお渡しします。</p>
+<a class="button" href="/apply?birth={{ r.birth }}">問いを書いて、続きを読む</a>
+<div class="share" style="margin-top:48px">
+  <p>この風景を共有する</p>
+  <img class="card" src="{{ r.card_path }}" alt="{{ r.heading }}">
+  <a href="https://twitter.com/intent/tweet?text={{ r.share_text | urlencode }}" target="_blank" rel="noopener">Xに投稿する</a>
+  ／ <a href="{{ r.card_path }}" download="{{ r.number }}_{{ r.kanshi }}.svg">カードを保存する</a>
+</div>
+{% endblock %}

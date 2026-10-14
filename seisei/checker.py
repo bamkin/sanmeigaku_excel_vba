@@ -30,16 +30,25 @@ class Issue:
 
 
 @lru_cache(maxsize=4)
-def textbook_names(docs_dir: str) -> tuple[str, ...]:
-    """docs/45 の5列目（教材の呼び名）。"""
+def textbook_name_levels(docs_dir: str) -> tuple[tuple[str, str], ...]:
+    """docs/45 の「教材の呼び名」列と「禁則」列 → ((呼び名, "error"|"warning"), ...)。
+
+    禁則列が「警告」の呼び名は普通名詞・慣用句になっているもので、出ても不合格にせず
+    承認画面で人が確認する。列が無ければエラー扱い。
+    """
     path = os.path.join(docs_dir, "45_六十花甲子_照合表.md")
-    names = []
+    out = []
     with open(path, encoding="utf-8") as fp:
         for line in fp:
-            m = re.match(r"^\|\s*\d+\s*\|[^|]*\|[^|]*\|[^|]*\|\s*([^|]+?)\s*\|", line)
+            m = re.match(r"^\|\s*\d+\s*\|[^|]*\|[^|]*\|[^|]*\|\s*([^|]+?)\s*\|(?:\s*([^|]*?)\s*\|)?", line)
             if m:
-                names.append(m.group(1))
-    return tuple(names)
+                level = "warning" if (m.group(2) or "").strip() == "警告" else "error"
+                out.append((m.group(1), level))
+    return tuple(out)
+
+
+def textbook_names(docs_dir: str) -> tuple[str, ...]:
+    return tuple(n for n, _ in textbook_name_levels(docs_dir))
 
 
 def count_chars(md: str) -> int:
@@ -61,9 +70,10 @@ def check_report(md: str, docs_dir: str, exempt: tuple[str, ...] = ()) -> list[I
         if n:
             issues.append(Issue("error", "forbidden_word", f"「{w}」が{n}回"))
 
-    for name in textbook_names(docs_dir):
+    for name, level in textbook_name_levels(docs_dir):
         if name in md:
-            issues.append(Issue("error", "textbook_name", f"教材由来の呼び名「{name}」"))
+            issues.append(Issue(level, "textbook_name", f"教材由来の呼び名「{name}」"
+                                + ("（普通名詞。人の目で確認）" if level == "warning" else "")))
 
     headings = [ln for ln in md.splitlines() if ln.startswith("#")]
     for key in REQUIRED_HEADINGS:

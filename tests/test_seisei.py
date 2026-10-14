@@ -6,7 +6,7 @@ import json
 import os
 
 from sanmei import compute_destiny
-from seisei.checker import check_report, textbook_names
+from seisei.checker import check_report, textbook_name_levels, textbook_names
 from seisei.landscape import int_to_kanji, kanji_to_int, load_landscapes
 from seisei.prompt import build_system_prompt, build_user_message, insert_landscapes
 
@@ -29,11 +29,9 @@ def test_landscapes_complete_and_clean():
         assert l.name == rokuju[str(n)]["name"]
         assert "出典の言葉" not in l.body and "制作メモ" not in l.body and "書き方の約束" not in l.body
         assert l.body.strip() and "それが、あなたの風景です" in l.body
-        for tb in textbook_names(DOCS):
-            # 既知の衝突：丁卯「香木」・甲辰「常緑の木」は風景本文に普通名詞として出る（逆井に判断を仰ぐ）
-            if (n, tb) in ((4, "香木"), (41, "常緑の木")):
-                continue
-            assert tb not in l.body, (n, tb)
+        for tb, level in textbook_name_levels(DOCS):
+            if level == "error":  # 警告の呼び名（香木・常緑の木など）は普通名詞なので本文に出てよい
+                assert tb not in l.body, (n, tb)
     assert ls[60].heading == "六十　癸亥　源へ帰る水"
 
 
@@ -42,10 +40,9 @@ def test_system_prompt_sections():
     for key in ("# 文体ガイド", "# 学理リファレンス", "鑑定書の構成（固定）", "# 出力形式", "# 手本", "### 六十　癸亥　源へ帰る水"):
         assert key in sp
     assert "出典の言葉" not in sp.split("# 六十の風景")[1]
-    for tb in textbook_names(DOCS):
-        if tb in ("香木", "常緑の木"):
-            continue
-        assert tb not in sp, tb
+    for tb, level in textbook_name_levels(DOCS):
+        if level == "error":
+            assert tb not in sp, tb
 
 
 def test_user_message_and_insertion():
@@ -72,6 +69,16 @@ def test_checker_on_sample():
     assert "forbidden_word" not in codes and "textbook_name" not in codes
     assert "missing_heading" in codes  # サンプルは第八章（言い換え表）が無い
     assert any(i.code == "phrase_limit" for i in issues)  # 「ではなく」が多い（サンプル冒頭の注記どおり）
+
+
+def test_textbook_levels():
+    levels = dict(textbook_name_levels(DOCS))
+    assert len(levels) == 60
+    assert sum(v == "warning" for v in levels.values()) == 7
+    assert levels["香木"] == "warning" and levels["溝渠の水"] == "error"
+    md = "## はじめに\n常緑の木と溝渠の水。\n" + "\n".join(f"## {k}、x" for k in "一二三四五六七八")
+    got = {i.message[9:13]: i.level for i in check_report(md, DOCS) if i.code == "textbook_name"}
+    assert got == {"常緑の木": "warning", "溝渠の水": "error"}
 
 
 def test_checker_exempt():

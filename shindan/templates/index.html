@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>あなたの風景を、ひとつ。</h1>
+<p>生まれた日には、六十ある風景のうちの一つが決まっています。生年月日だけで、その一枚を見ることができます。</p>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+<form action="/shindan" method="get">
+  <label for="birth">生年月日</label>
+  <input type="date" id="birth" name="birth" value="{{ birth }}" min="1900-01-01" max="2100-12-31" required>
+  <div style="margin-top:12px">
+    <label for="sex">性別（任意）</label>
+    <select id="sex" name="sex">
+      <option value="unknown">答えない</option>
+      <option value="male">男性</option>
+      <option value="female">女性</option>
+    </select>
+  </div>
+  <button type="submit">風景を見る</button>
+</form>
+{% endblock %}
