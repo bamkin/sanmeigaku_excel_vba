@@ -22,7 +22,20 @@ python scripts/gen_setsu.py --year 1974  # 節入日の時刻を1年ぶん表示
 
 `sanmei/` は依存なしの純Python。Python から使うときは `from sanmei import compute_destiny`。
 実装上の判断と教材との食い違いは docs/61_算出層_実装メモ.md にまとめてある。
-節入日JSON（sanmei/data/setsu.json）は干支暦との突合が済んでいない。
+節入日JSON（sanmei/data/setsu.json）は干支暦との突合待ち（`python scripts/gen_setsu.py --year 1974` で時刻付きで表示）。
+
+## 生成層（開発順序2・実装済み、実機未検証）
+
+```
+pip install -r requirements-dev.txt      # anthropic SDK を含む
+export ANTHROPIC_API_KEY=...
+python -m seisei --birth 1973-11-23 --sex male --answers samples/1973-11-23_申込回答.json --name "逆井 勤" --out out.md
+python -m seisei ... --dry-run           # API を呼ばずプロンプトだけ書き出す
+python -m seisei --check 鑑定書.md        # 禁則チェックだけ通す
+```
+
+`seisei/` はシステムプロンプトを docs/10・29・40・00（構成と禁則）・50・30〜39 から組み立て、生成後に風景を差し込み、禁則チェック（docs/45 の教材呼び名、docs/00 の禁則語、見出し、文字数、文体の頻度制限）を通す。
+実装判断と確認待ちは docs/62_生成層_実装メモ.md。サンプル生成と docs/50 との差は samples/1973-11-23_比較.md。
 
 ## docs/ の一覧
 
@@ -37,7 +50,8 @@ python scripts/gen_setsu.py --year 1974  # 節入日の時刻を1年ぶん表示
 | 45_六十花甲子_照合表.md | 番号・干支・風景の名・従星・教材の呼び名 | 算出層のみ。禁則語リストの元 |
 | 50_鑑定書サンプル.md | 生成層の手本 | 生成層プロンプト |
 | 60_算出手順.md | 算出の規則・早見表・テストケース6件 | 算出層 |
-| 61_算出層_実装メモ.md | 算出層の実装判断・教材との食い違い・確認待ち | 算出層 |
+| 61_算出層_実装メモ.md | 算出層の実装判断・教材との食い違い（確認済み） | 算出層 |
+| 62_生成層_実装メモ.md | 生成層の実装判断・API設定・確認待ち | 生成層 |
 
 ## リポジトリに入れないもの
 

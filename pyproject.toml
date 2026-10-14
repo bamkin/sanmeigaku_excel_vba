@@ -3,13 +3,13 @@ name = "sanmei"
 version = "0.1.0"
 description = "六十の風景 — 算命学 算出層（決定的・依存なし）"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = ["anthropic>=1.13"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ephem>=4.1"]
 
-[tool.setuptools.packages.find]
-include = ["sanmei*"]
+[tool.setuptools]
+packages = ["sanmei", "seisei"]
 
 [tool.setuptools.package-data]
 sanmei = ["data/*.json"]
