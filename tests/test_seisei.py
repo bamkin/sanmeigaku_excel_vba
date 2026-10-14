@@ -7,6 +7,7 @@ import os
 
 from sanmei import compute_destiny
 from seisei.checker import check_report, textbook_name_levels, textbook_names
+from seisei.generate import api_key_from_env
 from seisei.landscape import int_to_kanji, kanji_to_int, load_landscapes
 from seisei.prompt import build_system_prompt, build_user_message, insert_landscapes
 
@@ -93,3 +94,15 @@ def test_checker_flags():
     codes = [i.code for i in issues]
     assert "forbidden_word" in codes and "textbook_name" in codes and "exclamation" in codes
     assert "phrase_limit" in codes and "missing_heading" in codes and "char_count" in codes
+
+
+def test_api_key_from_env(monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("ROKUJU_ANTHROPIC_API_KEY", raising=False)
+    assert api_key_from_env() is None
+    monkeypatch.setenv("ROKUJU_ANTHROPIC_API_KEY", "sk-rokuju")
+    assert api_key_from_env() == "sk-rokuju"
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-main")
+    assert api_key_from_env() == "sk-main"  # 本来の名前が優先
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "")
+    assert api_key_from_env() == "sk-rokuju"  # 空文字は無いものとして扱う

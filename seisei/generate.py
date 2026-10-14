@@ -38,10 +38,19 @@ def build_request(destiny: dict, answers: dict, name: str | None, docs_dir: str,
     return build_system_prompt(docs_dir), build_user_message(destiny, answers, name, today, landscapes)
 
 
+def api_key_from_env() -> str | None:
+    """API キー。ANTHROPIC_API_KEY が無ければ ROKUJU_ANTHROPIC_API_KEY を使う。
+
+    Claude Code のクラウド環境は ANTHROPIC_API_KEY という名前の変数をセッションに渡さないので、
+    別名でも受ける。どちらも無ければ None を返し、SDK の既定の解決（auth login のプロファイル等）に任せる。
+    """
+    return os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ROKUJU_ANTHROPIC_API_KEY") or None
+
+
 def _call_claude(system: str, user: str, model: str, effort: str, client=None) -> tuple[str, str | None, dict]:
     import anthropic
 
-    client = client or anthropic.Anthropic()
+    client = client or anthropic.Anthropic(api_key=api_key_from_env())
     kwargs = dict(
         model=model,
         max_tokens=MAX_TOKENS,

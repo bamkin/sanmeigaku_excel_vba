@@ -28,7 +28,7 @@ python scripts/gen_setsu.py --year 1974  # 節入日の時刻を1年ぶん表示
 
 ```
 pip install -r requirements-dev.txt      # anthropic SDK を含む
-export ANTHROPIC_API_KEY=...
+export ANTHROPIC_API_KEY=...             # Claude Code のクラウド環境では ROKUJU_ANTHROPIC_API_KEY（下記）
 python -m seisei --birth 1973-11-23 --sex male --answers samples/1973-11-23_申込回答.json --name "逆井 勤" --out out.md
 python -m seisei ... --dry-run           # API を呼ばずプロンプトだけ書き出す
 python -m seisei --check 鑑定書.md        # 禁則チェックだけ通す
@@ -40,6 +40,7 @@ python -m seisei --check 鑑定書.md        # 禁則チェックだけ通す
 ### 実機でサンプルを生成して比較を更新する
 
 1. Anthropic のコンソールで API キーを発行し、環境変数に入れる：`export ANTHROPIC_API_KEY=sk-ant-...`
+   - **Claude Code のクラウド環境で動かすとき**は、環境の設定に `ROKUJU_ANTHROPIC_API_KEY=sk-ant-...` の名前で入れる。クラウド環境は Claude Code 自身の認証を守るため `ANTHROPIC_API_KEY` という名前の変数をセッションに渡さない（保存しても消える）。`seisei` は `ANTHROPIC_API_KEY` が無ければ `ROKUJU_ANTHROPIC_API_KEY` を API キーとして使う（`seisei/generate.py` の `api_key_from_env`）。ローカルでは `ANTHROPIC_API_KEY` のままでよい
 2. 生成する（1973-11-23 男性、申込回答は samples/ のもの。`--today` は年運の「今年」を固定するため）：
    ```
    python -m seisei --birth 1973-11-23 --sex male --answers samples/1973-11-23_申込回答.json \
